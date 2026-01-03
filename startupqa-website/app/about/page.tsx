@@ -203,7 +203,7 @@ export default function About() {
                 Affordable for Startups
               </h3>
               <p className="text-gray-600">
-                $3K-$5.5K/month vs. $120K+/year for a full-time U.S. QA hire.
+                Fraction of the cost of a full-time U.S. QA hire ($120K+/year).
               </p>
             </div>
             <div className="text-center">

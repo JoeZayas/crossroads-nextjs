@@ -197,10 +197,10 @@ export default function HowWeWork() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Pricing That Makes Sense
+              Flexible Engagement Options
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Start small, scale as you grow. No long-term contracts required.
+              We offer part-time and full-time QA coverage tailored to your needs. Pricing is customized based on scope and team size.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
@@ -209,10 +209,9 @@ export default function HowWeWork() {
               <p className="text-gray-600 mb-6">
                 1 QA engineer testing 20 hours/week. Perfect for early-stage startups who need consistent coverage without a full-time commitment.
               </p>
-              <div className="text-3xl font-bold text-indigo-600 mb-2">
-                $3,000/mo
+              <div className="text-xl font-semibold text-indigo-600 mb-6">
+                Custom pricing based on your needs
               </div>
-              <p className="text-sm text-gray-500 mb-6">~80 hours per month</p>
               <ul className="space-y-3">
                 <li className="flex items-start">
                   <svg className="w-5 h-5 text-indigo-600 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -249,10 +248,9 @@ export default function HowWeWork() {
               <p className="text-gray-600 mb-6">
                 2 QA engineers working 40 hours/week. Best for startups preparing for a fundraise or product launch.
               </p>
-              <div className="text-3xl font-bold text-indigo-600 mb-2">
-                $5,500/mo
+              <div className="text-xl font-semibold text-indigo-600 mb-6">
+                Custom pricing based on your needs
               </div>
-              <p className="text-sm text-gray-500 mb-6">~160 hours per month</p>
               <ul className="space-y-3">
                 <li className="flex items-start">
                   <svg className="w-5 h-5 text-indigo-600 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
