@@ -32,20 +32,20 @@ export default function Home() {
   return (
     <main className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 text-white py-24 px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
+      <section className="relative bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-600 text-white py-32 px-4 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent"></div>
         <div className="max-w-6xl mx-auto relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             className="text-center"
           >
-            <h1 className="text-5xl md:text-6xl font-bold mb-6">
-              Your Journey to Recovery Starts Here
+            <h1 className="text-5xl md:text-7xl font-black mb-6 leading-tight font-poppins tracking-tight">
+              Your Journey to Recovery<br/>Starts Here
             </h1>
-            <p className="text-xl md:text-2xl mb-8 text-blue-100">
-              A supportive community dedicated to helping you build a fulfilling life in recovery
+            <p className="text-lg md:text-xl mb-10 text-emerald-50 max-w-3xl mx-auto font-light leading-relaxed">
+              A supportive community dedicated to helping you build a fulfilling life in recovery. Whether you're exploring recovery, supporting a loved one, or a professional helping someone find housing, we're here to help.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/contact" className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all transform hover:scale-105 shadow-lg">
@@ -60,17 +60,17 @@ export default function Home() {
       </section>
 
       {/* Features Grid */}
-      <section className="py-20 px-4 bg-gray-50">
+      <section className="py-24 px-4 bg-gray-50">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-20"
           >
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Welcome to Crossroads</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              At Crossroads Sober Living, we provide more than just housing—we offer a pathway to transformation.
+            <h2 className="text-5xl font-bold text-gray-900 mb-6 font-poppins">Welcome to Crossroads</h2>
+            <p className="text-lg text-gray-700 max-w-3xl mx-auto leading-relaxed">
+              At Crossroads Sober Living, we provide more than just housing—we offer a pathway to transformation with structured support for employment, community, and housing stability.
             </p>
           </motion.div>
 
