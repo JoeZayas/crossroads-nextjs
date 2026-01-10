@@ -59,7 +59,13 @@ h1, h2, h3, h4, h5, h6 {
 .from-blue-900 h3,
 .from-blue-900 h4,
 .from-blue-900 h5,
-.from-blue-900 h6 {
+.from-blue-900 h6,
+footer h1,
+footer h2,
+footer h3,
+footer h4,
+footer h5,
+footer h6 {
   color: white;
 }
 
