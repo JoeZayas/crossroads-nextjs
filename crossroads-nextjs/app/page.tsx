@@ -44,7 +44,7 @@ export default function Home() {
             <h1 className="text-5xl md:text-7xl font-black mb-6 leading-tight font-poppins tracking-tight">
               Your Journey to Recovery<br/>Starts Here
             </h1>
-            <p className="text-lg md:text-xl mb-10 text-emerald-50 max-w-3xl mx-auto font-light leading-relaxed">
+            <p className="text-lg md:text-xl mb-10 text-white max-w-3xl mx-auto font-light leading-relaxed">
               A supportive community dedicated to helping you build a fulfilling life in recovery. Whether you're exploring recovery, supporting a loved one, or a professional helping someone find housing, we're here to help.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -94,17 +94,17 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-gradient-to-r from-blue-800 to-blue-900 text-white py-16 px-4">
+      <section className="bg-gradient-to-r from-emerald-700 to-teal-700 text-white py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Take the Next Step?</h2>
-          <p className="text-xl mb-8 text-blue-100">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 font-poppins">Ready to Take the Next Step?</h2>
+          <p className="text-lg md:text-xl mb-10 text-white font-light leading-relaxed">
             Our team is here to answer your questions and guide you through the intake process.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/contact" className="bg-green-600 hover:bg-green-700 px-8 py-4 rounded-lg font-semibold text-lg transition-all transform hover:scale-105">
+            <Link href="/contact" className="bg-white text-emerald-700 hover:bg-emerald-50 px-8 py-4 rounded-lg font-semibold font-poppins text-lg transition-all transform hover:scale-105">
               Contact Us Today
             </Link>
-            <a href="tel:+15073981970" className="bg-white text-emerald-900 hover:bg-emerald-50 px-8 py-4 rounded-lg font-semibold text-lg transition-all transform hover:scale-105">
+            <a href="tel:+15073981970" className="bg-emerald-100 text-emerald-900 hover:bg-white px-8 py-4 rounded-lg font-semibold font-poppins text-lg transition-all transform hover:scale-105">
               Call
             </a>
           </div>
