@@ -32,7 +32,7 @@ export default function Home() {
   return (
     <main className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-600 text-white py-32 px-4 overflow-hidden">
+      <section className="relative bg-gradient-to-r from-slate-900 to-blue-900 text-white py-32 px-4 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent"></div>
         <div className="max-w-6xl mx-auto relative z-10">
           <motion.div
@@ -44,14 +44,14 @@ export default function Home() {
             <h1 className="text-5xl md:text-7xl font-black mb-6 leading-tight font-poppins tracking-tight">
               Your Journey to Recovery<br/>Starts Here
             </h1>
-            <p className="text-lg md:text-xl mb-10 text-white max-w-3xl mx-auto font-light leading-relaxed">
+            <p className="text-lg md:text-xl mb-10 text-blue-100 max-w-3xl mx-auto font-light leading-relaxed">
               A supportive community dedicated to helping you build a fulfilling life in recovery. Whether you're exploring recovery, supporting a loved one, or a professional helping someone find housing, we're here to help.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/contact" className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all transform hover:scale-105 shadow-lg">
+              <Link href="/contact" className="bg-amber-600 hover:bg-amber-700 text-white px-8 py-4 rounded-lg font-semibold font-poppins text-lg transition-all transform hover:scale-105 shadow-lg">
                 Start Your Intake
               </Link>
-              <Link href="/about" className="bg-white text-blue-900 hover:bg-blue-50 px-8 py-4 rounded-lg font-semibold text-lg transition-all transform hover:scale-105 shadow-lg">
+              <Link href="/about" className="bg-white text-slate-900 hover:bg-slate-100 px-8 py-4 rounded-lg font-semibold font-poppins text-lg transition-all transform hover:scale-105 shadow-lg">
                 Learn More
               </Link>
             </div>
@@ -60,7 +60,7 @@ export default function Home() {
       </section>
 
       {/* Features Grid */}
-      <section className="py-24 px-4 bg-gray-50">
+      <section className="py-24 px-4 bg-white">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0 }}
@@ -94,17 +94,17 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-gradient-to-r from-emerald-700 to-teal-700 text-white py-20 px-4">
+      <section className="bg-gradient-to-r from-slate-900 to-slate-800 text-white py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl md:text-5xl font-bold mb-6 font-poppins">Ready to Take the Next Step?</h2>
-          <p className="text-lg md:text-xl mb-10 text-white font-light leading-relaxed">
+          <p className="text-lg md:text-xl mb-10 text-blue-100 font-light leading-relaxed">
             Our team is here to answer your questions and guide you through the intake process.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/contact" className="bg-white text-emerald-700 hover:bg-emerald-50 px-8 py-4 rounded-lg font-semibold font-poppins text-lg transition-all transform hover:scale-105">
+            <Link href="/contact" className="bg-amber-600 hover:bg-amber-700 text-white px-8 py-4 rounded-lg font-semibold font-poppins text-lg transition-all transform hover:scale-105">
               Contact Us Today
             </Link>
-            <a href="tel:+15073981970" className="bg-emerald-100 text-emerald-900 hover:bg-white px-8 py-4 rounded-lg font-semibold font-poppins text-lg transition-all transform hover:scale-105">
+            <a href="tel:+15073981970" className="bg-white text-slate-900 hover:bg-slate-100 px-8 py-4 rounded-lg font-semibold font-poppins text-lg transition-all transform hover:scale-105">
               Call
             </a>
           </div>

@@ -1,11 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8faf8;
-  --foreground: #1a5c52;
-  --primary-green: #059669;
-  --secondary-blue: #3b82f6;
-  --accent-gold: #f59e0b;
+  --background: #ffffff;
+  --foreground: #1f2937;
+  --primary-navy: #1e3a5f;
+  --primary-dark: #0f172a;
+  --accent-coral: #d97706;
+  --accent-warm: #ea580c;
+  --accent-light: #fbbf24;
   --font-poppins: 'Poppins', sans-serif;
 }
 
@@ -25,7 +27,7 @@
 
 body {
   background: var(--background);
-  color: #2d3748;
+  color: #374151;
   font-family: 'Inter', Arial, Helvetica, sans-serif;
   line-height: 1.7;
   font-size: 16px;
@@ -35,7 +37,7 @@ body {
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-poppins);
   font-weight: 700;
-  color: #0f3a37;
+  color: var(--primary-dark);
   line-height: 1.3;
 }
 
@@ -55,22 +57,22 @@ h3 {
 }
 
 p {
-  color: #4a5568;
+  color: #4b5563;
   line-height: 1.8;
 }
 
 /* Peaceful color scheme accents */
 a {
-  color: var(--primary-green);
+  color: var(--primary-navy);
   transition: color 0.2s ease;
 }
 
 a:hover {
-  color: #047857;
+  color: var(--accent-coral);
 }
 
 button, input[type="button"], input[type="submit"] {
-  background-color: var(--primary-green);
+  background-color: var(--primary-navy);
   color: white;
   border: none;
   border-radius: 0.5rem;
@@ -82,6 +84,6 @@ button, input[type="button"], input[type="submit"] {
 }
 
 button:hover, input[type="button"]:hover, input[type="submit"]:hover {
-  background-color: #047857;
+  background-color: var(--accent-coral);
   transform: translateY(-2px);
 }

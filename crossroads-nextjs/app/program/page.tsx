@@ -24,10 +24,10 @@ export default function Program() {
 
   return (
     <main className="min-h-screen">
-      <div className="bg-gradient-to-r from-emerald-800 to-teal-700 text-white py-32 px-4">
+      <div className="bg-gradient-to-r from-slate-900 to-blue-900 text-white py-32 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-5xl md:text-6xl font-black mb-6 font-poppins tracking-tight leading-tight">Our Program</h1>
-          <p className="text-lg md:text-xl text-emerald-50 font-light">A comprehensive approach to recovery and life transformation</p>
+          <p className="text-lg md:text-xl text-blue-100 font-light">A comprehensive approach to recovery and life transformation</p>
         </div>
       </div>
 
@@ -43,9 +43,9 @@ export default function Program() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.2 }}
-                className="bg-white p-10 rounded-xl shadow-md hover:shadow-lg transition-shadow border-t-4 border-emerald-600"
+                className="bg-white p-10 rounded-xl shadow-md hover:shadow-lg transition-shadow border-t-4 border-amber-600"
               >
-                <div className="w-16 h-16 bg-emerald-600 text-white rounded-full flex items-center justify-center text-3xl font-bold mb-6 font-poppins">
+                <div className="w-16 h-16 bg-amber-600 text-white rounded-full flex items-center justify-center text-3xl font-bold mb-6 font-poppins">
                   {pillar.num}
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-6 font-poppins">{pillar.title}</h3>
@@ -60,7 +60,7 @@ export default function Program() {
             ))}
           </div>
 
-          <div className="bg-emerald-50 border-l-4 border-emerald-600 p-10 rounded-r-xl mb-16">
+          <div className="bg-blue-50 border-l-4 border-amber-600 p-10 rounded-r-xl mb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-6 font-poppins">MAT Support</h2>
             <p className="text-lg text-gray-700 mb-6 font-light leading-relaxed">
               At Crossroads, we fully support residents participating in MAT programs. We understand that MAT is an evidence-based approach that significantly improves recovery outcomes.

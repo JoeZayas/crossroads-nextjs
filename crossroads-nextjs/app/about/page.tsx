@@ -5,10 +5,10 @@ import { motion } from 'framer-motion';
 export default function About() {
   return (
     <main className="min-h-screen">
-      <div className="bg-gradient-to-r from-emerald-800 to-teal-700 text-white py-32 px-4">
+      <div className="bg-gradient-to-r from-slate-900 to-blue-900 text-white py-32 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-5xl md:text-6xl font-black mb-6 font-poppins tracking-tight leading-tight">About Crossroads<br/>Sober Living</h1>
-          <p className="text-lg md:text-xl text-emerald-50 font-light">Building a foundation for lasting recovery and personal growth</p>
+          <p className="text-lg md:text-xl text-blue-100 font-light">Building a foundation for lasting recovery and personal growth</p>
         </div>
       </div>
 
@@ -35,7 +35,7 @@ export default function About() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-white border-l-4 border-emerald-600 p-8 shadow-md rounded-r-lg hover:shadow-lg transition-shadow"
+                className="bg-white border-l-4 border-amber-600 p-8 shadow-md rounded-r-lg hover:shadow-lg transition-shadow"
               >
                 <h3 className="text-xl font-bold text-gray-900 mb-3 font-poppins">{value.title}</h3>
                 <p className="text-gray-700 font-light leading-relaxed">{value.desc}</p>
@@ -43,7 +43,7 @@ export default function About() {
             ))}
           </div>
 
-          <div className="bg-emerald-50 border-l-4 border-emerald-600 p-10 rounded-r-xl mb-12">
+          <div className="bg-blue-50 border-l-4 border-amber-600 p-10 rounded-r-xl mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-6 font-poppins">MAT Supportive Environment</h2>
             <p className="text-lg text-gray-700 mb-4 font-light leading-relaxed">
               Crossroads Sober Living is proud to be a MAT-supportive facility. We recognize that Medication Assisted Treatment is an evidence-based approach to treating substance use disorders.
