@@ -29,9 +29,9 @@ For production use, you should verify your own domain:
 
 ### 4. Configure Environment Variables
 
-1. Copy `.env.local.example` to `.env.local`:
+1. Copy `.env.example` to `.env.local`:
    ```bash
-   cp .env.local.example .env.local
+   cp .env.example .env.local
    ```
 
 2. Edit `.env.local` and add your configuration:
