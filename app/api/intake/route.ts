@@ -70,7 +70,25 @@ interface IntakeFormData {
   authorizeBackgroundCheck: boolean;
 }
 
+// Helper function to escape HTML to prevent XSS attacks
+function escapeHtml(text: string | undefined | null): string {
+  if (!text) return '';
+  const map: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  };
+  return String(text).replace(/[&<>"']/g, (char) => map[char]);
+}
+
 function generateEmailHTML(data: IntakeFormData): string {
+  // Helper to safely render optional fields
+  const renderValue = (value: string | undefined | null, defaultText = 'Not provided') => {
+    return escapeHtml(value) || defaultText;
+  };
+
   return `
 <!DOCTYPE html>
 <html>
@@ -121,33 +139,33 @@ function generateEmailHTML(data: IntakeFormData): string {
 </head>
 <body>
   <h1>New Intake Form Submission</h1>
-  <p><strong>Submitted:</strong> ${new Date().toLocaleString()}</p>
+  <p><strong>Submitted:</strong> ${escapeHtml(new Date().toLocaleString())}</p>
 
   <div class="section">
     <h2>Personal Information</h2>
     <div class="field">
       <div class="label">Name:</div>
-      <div class="value">${data.firstName} ${data.lastName}</div>
+      <div class="value">${escapeHtml(data.firstName)} ${escapeHtml(data.lastName)}</div>
     </div>
     <div class="field">
       <div class="label">Date of Birth:</div>
-      <div class="value">${data.dateOfBirth}</div>
+      <div class="value">${escapeHtml(data.dateOfBirth)}</div>
     </div>
     <div class="field">
       <div class="label">Phone Number:</div>
-      <div class="value">${data.phoneNumber}</div>
+      <div class="value">${escapeHtml(data.phoneNumber)}</div>
     </div>
     <div class="field">
       <div class="label">Email Address:</div>
-      <div class="value">${data.email}</div>
+      <div class="value">${escapeHtml(data.email)}</div>
     </div>
     <div class="field">
       <div class="label">Current Address:</div>
-      <div class="value">${data.address || 'Not provided'}</div>
+      <div class="value">${renderValue(data.address)}</div>
     </div>
     <div class="field">
       <div class="label">Emergency Contact:</div>
-      <div class="value">${data.emergencyContactName} - ${data.emergencyContactPhone}</div>
+      <div class="value">${escapeHtml(data.emergencyContactName)} - ${escapeHtml(data.emergencyContactPhone)}</div>
     </div>
   </div>
 
@@ -155,19 +173,19 @@ function generateEmailHTML(data: IntakeFormData): string {
     <h2>Recovery History</h2>
     <div class="field">
       <div class="label">Clean/Sober Date:</div>
-      <div class="value">${data.soberDate || 'Not provided'}</div>
+      <div class="value">${renderValue(data.soberDate)}</div>
     </div>
     <div class="field">
       <div class="label">Substance Use History:</div>
-      <div class="value">${data.substanceHistory}</div>
+      <div class="value">${escapeHtml(data.substanceHistory)}</div>
     </div>
     <div class="field">
       <div class="label">Treatment Programs Completed:</div>
-      <div class="value">${data.treatmentPrograms}</div>
+      <div class="value">${escapeHtml(data.treatmentPrograms)}</div>
     </div>
     <div class="field">
       <div class="label">Treatment History Details:</div>
-      <div class="value">${data.treatmentDetails || 'Not provided'}</div>
+      <div class="value">${renderValue(data.treatmentDetails)}</div>
     </div>
   </div>
 
@@ -175,24 +193,24 @@ function generateEmailHTML(data: IntakeFormData): string {
     <h2>Medication Assisted Treatment (MAT)</h2>
     <div class="field">
       <div class="label">Currently on MAT:</div>
-      <div class="value">${data.onMAT}</div>
+      <div class="value">${escapeHtml(data.onMAT)}</div>
     </div>
     ${data.matMedication ? `
     <div class="field">
       <div class="label">MAT Medication:</div>
-      <div class="value">${data.matMedication}</div>
+      <div class="value">${escapeHtml(data.matMedication)}</div>
     </div>
     ` : ''}
     ${data.matProvider ? `
     <div class="field">
       <div class="label">MAT Provider/Clinic:</div>
-      <div class="value">${data.matProvider}</div>
+      <div class="value">${escapeHtml(data.matProvider)}</div>
     </div>
     ` : ''}
     ${data.matDosage ? `
     <div class="field">
       <div class="label">Current Dosage:</div>
-      <div class="value">${data.matDosage}</div>
+      <div class="value">${escapeHtml(data.matDosage)}</div>
     </div>
     ` : ''}
   </div>
@@ -201,25 +219,25 @@ function generateEmailHTML(data: IntakeFormData): string {
     <h2>Medical & Mental Health</h2>
     <div class="field">
       <div class="label">Medical Conditions:</div>
-      <div class="value">${data.medicalConditions || 'None reported'}</div>
+      <div class="value">${renderValue(data.medicalConditions, 'None reported')}</div>
     </div>
     <div class="field">
       <div class="label">Current Medications (other than MAT):</div>
-      <div class="value">${data.currentMedications || 'None reported'}</div>
+      <div class="value">${renderValue(data.currentMedications, 'None reported')}</div>
     </div>
     <div class="field">
       <div class="label">Mental Health Diagnosis:</div>
-      <div class="value">${data.mentalHealthDiagnosis}</div>
+      <div class="value">${escapeHtml(data.mentalHealthDiagnosis)}</div>
     </div>
     <div class="field">
       <div class="label">Mental Health Details:</div>
-      <div class="value">${data.mentalHealthDetails || 'Not provided'}</div>
+      <div class="value">${renderValue(data.mentalHealthDetails)}</div>
     </div>
     <div class="field">
       <div class="label">Suicidal Thoughts:</div>
-      <div class="value">${data.suicidalThoughts}</div>
+      <div class="value">${escapeHtml(data.suicidalThoughts)}</div>
     </div>
-    ${data.suicidalThoughts !== 'No' ? `
+    ${data.suicidalThoughts === 'Yes' || data.suicidalThoughts === 'Sometimes' ? `
     <div class="alert">
       <strong>⚠️ ALERT:</strong> Applicant indicated experiencing suicidal thoughts. Immediate follow-up recommended.
     </div>
@@ -230,19 +248,19 @@ function generateEmailHTML(data: IntakeFormData): string {
     <h2>Legal & Employment</h2>
     <div class="field">
       <div class="label">Legal Matters:</div>
-      <div class="value">${data.legalMatters}</div>
+      <div class="value">${escapeHtml(data.legalMatters)}</div>
     </div>
     <div class="field">
       <div class="label">Legal Details:</div>
-      <div class="value">${data.legalDetails || 'Not provided'}</div>
+      <div class="value">${renderValue(data.legalDetails)}</div>
     </div>
     <div class="field">
       <div class="label">Employment Status:</div>
-      <div class="value">${data.employmentStatus}</div>
+      <div class="value">${escapeHtml(data.employmentStatus)}</div>
     </div>
     <div class="field">
       <div class="label">Employment Goals:</div>
-      <div class="value">${data.employmentGoals || 'Not provided'}</div>
+      <div class="value">${renderValue(data.employmentGoals)}</div>
     </div>
   </div>
 
@@ -250,15 +268,15 @@ function generateEmailHTML(data: IntakeFormData): string {
     <h2>Financial Information</h2>
     <div class="field">
       <div class="label">Current Income Source:</div>
-      <div class="value">${data.incomeSource}</div>
+      <div class="value">${escapeHtml(data.incomeSource)}</div>
     </div>
     <div class="field">
       <div class="label">Can Pay Monthly Fees:</div>
-      <div class="value">${data.canPayFees}</div>
+      <div class="value">${escapeHtml(data.canPayFees)}</div>
     </div>
     <div class="field">
       <div class="label">Long-term Housing Goals:</div>
-      <div class="value">${data.housingGoals}</div>
+      <div class="value">${escapeHtml(data.housingGoals)}</div>
     </div>
   </div>
 
@@ -266,19 +284,19 @@ function generateEmailHTML(data: IntakeFormData): string {
     <h2>Goals & Motivation</h2>
     <div class="field">
       <div class="label">Why Crossroads:</div>
-      <div class="value">${data.whyCrossroads}</div>
+      <div class="value">${escapeHtml(data.whyCrossroads)}</div>
     </div>
     <div class="field">
       <div class="label">Primary Recovery Goals:</div>
-      <div class="value">${data.recoveryGoals}</div>
+      <div class="value">${escapeHtml(data.recoveryGoals)}</div>
     </div>
     <div class="field">
       <div class="label">Anticipated Challenges:</div>
-      <div class="value">${data.anticipatedChallenges || 'Not provided'}</div>
+      <div class="value">${renderValue(data.anticipatedChallenges)}</div>
     </div>
     <div class="field">
       <div class="label">Support Needed:</div>
-      <div class="value">${data.supportNeeded || 'Not provided'}</div>
+      <div class="value">${renderValue(data.supportNeeded)}</div>
     </div>
   </div>
 
@@ -286,14 +304,14 @@ function generateEmailHTML(data: IntakeFormData): string {
     <h2>References</h2>
     <div class="field">
       <div class="label">How They Heard About Crossroads:</div>
-      <div class="value">${data.howHeardAbout}</div>
+      <div class="value">${escapeHtml(data.howHeardAbout)}</div>
     </div>
     <div class="field">
       <div class="label">Professional Reference:</div>
       <div class="value">
-        ${data.reference1Name || 'Not provided'}
-        ${data.reference1Phone ? `<br>Phone: ${data.reference1Phone}` : ''}
-        ${data.reference1Relationship ? `<br>Relationship: ${data.reference1Relationship}` : ''}
+        ${renderValue(data.reference1Name)}
+        ${data.reference1Phone ? `<br>Phone: ${escapeHtml(data.reference1Phone)}` : ''}
+        ${data.reference1Relationship ? `<br>Relationship: ${escapeHtml(data.reference1Relationship)}` : ''}
       </div>
     </div>
   </div>
@@ -351,11 +369,15 @@ export async function POST(request: NextRequest) {
     // Generate the email HTML
     const emailHTML = generateEmailHTML(formData);
 
+    // Sanitize the name fields for the subject line
+    const sanitizedFirstName = escapeHtml(formData.firstName).substring(0, 50);
+    const sanitizedLastName = escapeHtml(formData.lastName).substring(0, 50);
+
     // Send the email using Resend
     const { data, error } = await resend.emails.send({
       from: process.env.EMAIL_FROM,
       to: process.env.EMAIL_TO,
-      subject: `New Intake Form Submission - ${formData.firstName} ${formData.lastName}`,
+      subject: `New Intake Form Submission - ${sanitizedFirstName} ${sanitizedLastName}`,
       html: emailHTML,
     });
 
