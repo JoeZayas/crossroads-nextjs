@@ -48,6 +48,10 @@ Screenshot*
 # Other
 .aws/
 .docker/
+
+# Environment variables
+.env.local
+.env.*.local
 .npm/
 .nvm/
 .conda/
