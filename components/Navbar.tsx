@@ -23,7 +23,7 @@ export default function Navbar() {
             <img
               src="/assets/images/crossroads_sober_living_logo.png"
               alt="Crossroads Sober Living Logo"
-              className="h-12 w-auto"
+              className="h-20 w-auto"
             />
             <span className="text-xl font-bold text-slate-900 hidden sm:inline">Crossroads Sober Living</span>
           </Link>
