@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 
 export default function Navbar() {
@@ -21,13 +20,10 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <Image
+            <img
               src="/assets/images/crossroads_sober_living_logo.png"
               alt="Crossroads Sober Living Logo"
-              width={48}
-              height={48}
               className="h-12 w-auto"
-              unoptimized
             />
             <span className="text-xl font-bold text-slate-900 hidden sm:inline">Crossroads Sober Living</span>
           </Link>
