@@ -382,9 +382,10 @@ export async function POST(request: NextRequest) {
     });
 
     if (error) {
-      console.error('Resend error:', error);
+      console.error('Resend error details:', JSON.stringify(error, null, 2));
+      console.error('Resend error message:', error.message || error);
       return NextResponse.json(
-        { error: 'Failed to send email. Please try again or contact support.' },
+        { error: `Failed to send email: ${error.message || 'Unknown error'}` },
         { status: 500 }
       );
     }
