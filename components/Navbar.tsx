@@ -27,6 +27,7 @@ export default function Navbar() {
               width={48}
               height={48}
               className="h-12 w-auto"
+              unoptimized
             />
             <span className="text-xl font-bold text-slate-900 hidden sm:inline">Crossroads Sober Living</span>
           </Link>
