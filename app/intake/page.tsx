@@ -241,6 +241,7 @@ export default function Intake() {
                       <option>Methadone</option>
                       <option>Buprenorphine (Suboxone/Subutex)</option>
                       <option>Naltrexone (Vivitrol)</option>
+                      <option>Medical Marijuana</option>
                       <option>Other</option>
                     </select>
                   </div>
