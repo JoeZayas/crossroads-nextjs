@@ -12,12 +12,12 @@ export async function POST(request: Request) {
     const session = await supabaseAuthSignIn(email, password);
 
     const response = NextResponse.json({ ok: true, user: session.user });
-    response.cookies.set(adminCookieName, session.access_token, {
+    response.cookies.set(adminCookieName, session.access_token!, {
       httpOnly: true,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      maxAge: session.expires_in,
+      maxAge: session.expires_in!,
     });
 
     return response;
