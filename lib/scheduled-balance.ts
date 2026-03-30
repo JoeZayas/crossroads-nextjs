@@ -1,5 +1,6 @@
 import type { PaymentType, ResidentBalanceRow } from "@/lib/admin-types";
 import { supabaseRest } from "@/lib/supabase";
+import { addDays, nextMonthStart, startOfToday } from "@/lib/rental-period";
 
 type RentDueLedgerRow = {
   resident_id: string;
@@ -25,19 +26,6 @@ const parseUsDate = (value: string) => {
   }
   return new Date(yyyy, mm - 1, dd);
 };
-
-const startOfToday = () => {
-  const date = new Date();
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-};
-
-const addDays = (date: Date, days: number) => {
-  const next = new Date(date);
-  next.setDate(next.getDate() + days);
-  return next;
-};
-
-const nextMonthStart = (date: Date) => new Date(date.getFullYear(), date.getMonth() + 1, 1);
 
 const getMissingScheduledAmount = (
   status: string,
@@ -72,7 +60,7 @@ const getMissingScheduledAmount = (
   let missing = 0;
   let periodStart = addDays(latestDueEndDate, 1);
   periodStart = new Date(periodStart.getFullYear(), periodStart.getMonth(), 1);
-  while (periodStart <= today) {
+  while (periodStart < today) {
     missing += MONTHLY_RATE;
     periodStart = nextMonthStart(periodStart);
   }

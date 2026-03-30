@@ -131,8 +131,13 @@ export default function ResidentDetailPage() {
 
     setDescription("");
     setAmount("");
-    setLedgerSuccess(true);
-    await load(residentId);
+
+    try {
+      await load(residentId);
+      setLedgerSuccess(true);
+    } catch {
+      setError("Entry was saved but the ledger could not be reloaded. Please refresh the page.");
+    }
   };
 
   const onSaveResident = async (event: FormEvent<HTMLFormElement>) => {

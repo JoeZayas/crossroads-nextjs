@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseRest } from "@/lib/supabase";
 import type { LedgerEntry, OverdueResidentRow, Resident, ResidentBalanceRow } from "@/lib/admin-types";
 import { applyScheduledBalances } from "@/lib/scheduled-balance";
+import { addDays, nextMonthStart, startOfMonth, startOfToday } from "@/lib/rental-period";
 import { getAdminAccessToken } from "../_shared/auth";
 
 const RENT_DUE_PATTERN = /Rent due (\d{1,2}\/\d{1,2}\/\d{4}) to (\d{1,2}\/\d{1,2}\/\d{4})/i;
@@ -14,19 +15,6 @@ const parseUsDate = (value: string) => {
     return null;
   }
   return new Date(yyyy, mm - 1, dd);
-};
-
-const startOfToday = () => {
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-};
-
-const startOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1);
-const nextMonthStart = (date: Date) => new Date(date.getFullYear(), date.getMonth() + 1, 1);
-const addDays = (date: Date, days: number) => {
-  const next = new Date(date);
-  next.setDate(next.getDate() + days);
-  return next;
 };
 
 export async function GET() {
@@ -45,12 +33,12 @@ export async function GET() {
       ),
       supabaseRest<Resident[]>("residents?select=id&status=eq.Active", "GET", token),
       supabaseRest<LedgerEntry[]>(
-        `ledger_entries?select=resident_id,amount,entry_type&entry_type=eq.payment&description=ilike.${encodeURIComponent("Rent payment%")}&entry_date=gte.${monthStartIso}`,
+        `ledger_entries?select=resident_id,amount,entry_type&entry_type=eq.payment&entry_date=gte.${monthStartIso}`,
         "GET",
         token,
       ),
       supabaseRest<Array<{ resident_id: string; entry_date: string }>>(
-        `ledger_entries?select=resident_id,entry_date&entry_type=eq.payment&description=ilike.${encodeURIComponent("Rent payment%")}&order=entry_date.desc`,
+        `ledger_entries?select=resident_id,entry_date&entry_type=eq.payment&order=entry_date.desc`,
         "GET",
         token,
       ),
@@ -102,7 +90,7 @@ export async function GET() {
 
       if (resident.payment_type === "Weekly") {
         let periodStart = latestEnd ? addDays(latestEnd, 1) : monthStart;
-        while (periodStart <= today) {
+        while (periodStart < today) {
           if (periodStart.getFullYear() === monthStartYear && periodStart.getMonth() === monthStartMonth) {
             scheduledThisMonth += WEEKLY_RATE;
           }
@@ -112,7 +100,7 @@ export async function GET() {
         let periodStart = latestEnd
           ? startOfMonth(addDays(latestEnd, 1))
           : monthStart;
-        while (periodStart <= today) {
+        while (periodStart < today) {
           if (periodStart.getFullYear() === monthStartYear && periodStart.getMonth() === monthStartMonth) {
             scheduledThisMonth += MONTHLY_RATE;
           }
