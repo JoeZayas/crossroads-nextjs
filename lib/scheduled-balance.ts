@@ -58,8 +58,7 @@ const getMissingScheduledAmount = (
   }
 
   let missing = 0;
-  let periodStart = addDays(latestDueEndDate, 1);
-  periodStart = new Date(periodStart.getFullYear(), periodStart.getMonth(), 1);
+  let periodStart = nextMonthStart(latestDueEndDate);
   while (periodStart < today) {
     missing += MONTHLY_RATE;
     periodStart = nextMonthStart(periodStart);
@@ -84,7 +83,7 @@ export async function applyScheduledBalances(
       token,
     ),
     supabaseRest<RentPaymentLedgerRow[]>(
-      `ledger_entries?select=resident_id,amount,entry_date&entry_type=eq.payment&description=ilike.${encodeURIComponent("Rent payment%")}&resident_id=in.(${inList})`,
+      `ledger_entries?select=resident_id,amount,entry_date&entry_type=eq.payment&resident_id=in.(${inList})`,
       "GET",
       token,
     ),
