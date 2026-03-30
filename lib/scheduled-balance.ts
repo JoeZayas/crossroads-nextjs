@@ -108,40 +108,53 @@ export async function applyScheduledBalances(
   }
 
   const residentTypeById = new Map(residents.map((resident) => [resident.resident_id, resident.payment_type]));
-  const latestPaymentCoverageByResident = new Map<string, Date>();
+
+  // Group payments by resident, sorted chronologically
+  const paymentsByResident = new Map<string, RentPaymentLedgerRow[]>();
   for (const row of rentPaymentRows) {
-    const paymentType = residentTypeById.get(row.resident_id);
-    if (!paymentType) {
+    const list = paymentsByResident.get(row.resident_id) ?? [];
+    list.push(row);
+    paymentsByResident.set(row.resident_id, list);
+  }
+
+  // Forward-fill coverage from latestDueEnd: apply each payment made after the last
+  // "Rent due" period sequentially, advancing coverage by whole periods. This avoids
+  // anchoring coverage to payment entry_date (which is when cash was received, not
+  // which period it covers).
+  const latestPaymentCoverageByResident = new Map<string, Date>();
+  for (const [residentId, payments] of paymentsByResident) {
+    const paymentType = residentTypeById.get(residentId);
+    const latestDueEnd = latestDueEndByResident.get(residentId);
+    if (!paymentType || !latestDueEnd) {
       continue;
     }
 
-    const paymentDate = new Date(row.entry_date);
-    if (Number.isNaN(paymentDate.getTime())) {
-      continue;
-    }
+    payments.sort((a, b) => a.entry_date.localeCompare(b.entry_date));
 
-    let coveredPeriods = 0;
-    let candidateEnd: Date | null = null;
-    if (paymentType === "Weekly") {
-      coveredPeriods = Math.floor(Math.abs(Number(row.amount)) / WEEKLY_RATE);
-      if (coveredPeriods > 0) {
-        candidateEnd = addDays(paymentDate, coveredPeriods * 7 - 1);
+    let coverage = latestDueEnd;
+    for (const row of payments) {
+      // Parse as local date to avoid UTC-offset shifting the date by one day
+      const [yyyy, mm, dd] = row.entry_date.split("-").map(Number);
+      const paymentDate = new Date(yyyy, mm - 1, dd);
+      // Only apply payments made after the last formally billed period
+      if (paymentDate <= latestDueEnd) {
+        continue;
       }
-    } else if (paymentType === "Monthly") {
-      coveredPeriods = Math.floor(Math.abs(Number(row.amount)) / MONTHLY_RATE);
-      if (coveredPeriods > 0) {
-        const end = new Date(paymentDate.getFullYear(), paymentDate.getMonth() + coveredPeriods, 0);
-        candidateEnd = end;
+      if (paymentType === "Weekly") {
+        const weeks = Math.floor(Math.abs(Number(row.amount)) / WEEKLY_RATE);
+        if (weeks > 0) {
+          coverage = addDays(coverage, weeks * 7);
+        }
+      } else if (paymentType === "Monthly") {
+        const months = Math.floor(Math.abs(Number(row.amount)) / MONTHLY_RATE);
+        if (months > 0) {
+          coverage = new Date(coverage.getFullYear(), coverage.getMonth() + months + 1, 0);
+        }
       }
     }
 
-    if (!candidateEnd) {
-      continue;
-    }
-
-    const current = latestPaymentCoverageByResident.get(row.resident_id);
-    if (!current || candidateEnd > current) {
-      latestPaymentCoverageByResident.set(row.resident_id, candidateEnd);
+    if (coverage > latestDueEnd) {
+      latestPaymentCoverageByResident.set(residentId, coverage);
     }
   }
 

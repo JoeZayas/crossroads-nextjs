@@ -113,7 +113,7 @@ export async function GET() {
     }
 
     const overdue: OverdueResidentRow[] = projectedBalances
-      .filter((row) => Number(row.balance) > 0)
+      .filter((row) => Number(row.balance) > 0 || Number(row.scheduled_due_missing ?? 0) > 0)
       .map((row) => ({
         resident_id: row.resident_id,
         full_name: row.full_name,
