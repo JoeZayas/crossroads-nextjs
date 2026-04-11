@@ -1,0 +1,208 @@
+name: Autofix
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason autofix was triggered'
+        required: false
+        default: 'Manual trigger'
+
+env:
+  BASE_URL: https://crossroads-soberliving.com
+  VERCEL_TEAM_ID: team_94v51elgUGI5VnjgoGAgXJLN
+  VERCEL_PROJECT_ID: prj_GU1rxiYVEt8oMvAGIBK9FaHVsk0V
+  SUPABASE_PROJECT_ID: tdsxvktekadesvobatzx
+
+jobs:
+  autofix:
+    name: Diagnose & Redeploy
+    runs-on: ubuntu-latest
+    steps:
+      # -----------------------------------------------------------------------
+      # Step 1 — Diagnose
+      # -----------------------------------------------------------------------
+      - name: Diagnose live site
+        id: diagnose
+        run: |
+          echo "Trigger reason: ${{ github.event.inputs.reason }}"
+          HTTP_CODE=$(curl -o /tmp/site_body.txt -s -w "%{http_code}" --max-time 10 "$BASE_URL/")
+          echo "HTTP code: $HTTP_CODE"
+          echo "http_code=$HTTP_CODE" >> "$GITHUB_OUTPUT"
+
+          if [ "$HTTP_CODE" == "000" ] || [ "$HTTP_CODE" == "" ]; then
+            FAILURE_TYPE="timeout_or_dns"
+          elif [ "$HTTP_CODE" -ge 500 ]; then
+            FAILURE_TYPE="server_error"
+          elif [ "$HTTP_CODE" == "404" ]; then
+            FAILURE_TYPE="not_found"
+          else
+            FAILURE_TYPE="unknown"
+          fi
+
+          echo "Failure type: $FAILURE_TYPE"
+          echo "failure_type=$FAILURE_TYPE" >> "$GITHUB_OUTPUT"
+
+      # -----------------------------------------------------------------------
+      # Step 2 — Check latest Vercel deployment state
+      # -----------------------------------------------------------------------
+      - name: Check Vercel latest deployment
+        id: vercel-check
+        run: |
+          RESPONSE=$(curl -s \
+            -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+            "https://api.vercel.com/v6/deployments?teamId=$VERCEL_TEAM_ID&projectId=$VERCEL_PROJECT_ID&limit=1")
+
+          echo "Vercel API response: $RESPONSE"
+
+          DEPLOYMENT_ID=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['deployments'][0]['uid'])" 2>/dev/null || echo "")
+          STATE=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['deployments'][0]['state'])" 2>/dev/null || echo "UNKNOWN")
+          URL=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['deployments'][0].get('url',''))" 2>/dev/null || echo "")
+
+          echo "deployment_id=$DEPLOYMENT_ID" >> "$GITHUB_OUTPUT"
+          echo "state=$STATE" >> "$GITHUB_OUTPUT"
+          echo "deployment_url=$URL" >> "$GITHUB_OUTPUT"
+          echo "Deployment ID: $DEPLOYMENT_ID  State: $STATE"
+
+      # -----------------------------------------------------------------------
+      # Step 3 — Redeploy if needed
+      # -----------------------------------------------------------------------
+      - name: Trigger Vercel redeploy
+        id: redeploy
+        if: |
+          steps.vercel-check.outputs.state == 'ERROR' ||
+          steps.vercel-check.outputs.state == 'CANCELED' ||
+          steps.diagnose.outputs.failure_type == 'server_error' ||
+          steps.diagnose.outputs.failure_type == 'timeout_or_dns'
+        run: |
+          DEPLOYMENT_ID="${{ steps.vercel-check.outputs.deployment_id }}"
+          if [ -z "$DEPLOYMENT_ID" ]; then
+            echo "No deployment ID found — cannot redeploy."
+            echo "new_deployment_id=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          RESPONSE=$(curl -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"deploymentId\": \"$DEPLOYMENT_ID\", \"name\": \"crossroads-soberliving\"}" \
+            "https://api.vercel.com/v13/deployments?teamId=$VERCEL_TEAM_ID")
+
+          echo "Redeploy response: $RESPONSE"
+
+          NEW_ID=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('id',''))" 2>/dev/null || echo "")
+          echo "new_deployment_id=$NEW_ID" >> "$GITHUB_OUTPUT"
+          echo "New deployment ID: $NEW_ID"
+
+      # -----------------------------------------------------------------------
+      # Step 4 — Poll until READY or ERROR (up to 24 × 15s = 6 minutes)
+      # -----------------------------------------------------------------------
+      - name: Wait for deployment to be READY
+        id: poll
+        if: steps.redeploy.outputs.new_deployment_id != ''
+        run: |
+          NEW_ID="${{ steps.redeploy.outputs.new_deployment_id }}"
+          MAX_ATTEMPTS=24
+          ATTEMPT=0
+          FINAL_STATE="UNKNOWN"
+
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            sleep 15
+            ATTEMPT=$((ATTEMPT + 1))
+
+            STATE=$(curl -s \
+              -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+              "https://api.vercel.com/v13/deployments/$NEW_ID?teamId=$VERCEL_TEAM_ID" \
+              | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('status','UNKNOWN'))" 2>/dev/null || echo "UNKNOWN")
+
+            echo "Attempt $ATTEMPT/$MAX_ATTEMPTS — state: $STATE"
+            FINAL_STATE="$STATE"
+
+            if [ "$STATE" == "READY" ] || [ "$STATE" == "ERROR" ]; then
+              break
+            fi
+          done
+
+          echo "final_state=$FINAL_STATE" >> "$GITHUB_OUTPUT"
+          echo "Final deployment state: $FINAL_STATE"
+
+      # -----------------------------------------------------------------------
+      # Step 5 — Validate all public pages
+      # -----------------------------------------------------------------------
+      - name: Validate live pages
+        id: validate
+        run: |
+          sleep 10
+          PAGES=("/" "/program" "/contact" "/contract")
+          ALL_OK=true
+          FAILED=""
+          for page in "${PAGES[@]}"; do
+            HTTP=$(curl -o /dev/null -s -w "%{http_code}" --max-time 10 "${BASE_URL}${page}")
+            echo "Page $page → HTTP $HTTP"
+            if [ "$HTTP" != "200" ]; then
+              ALL_OK=false
+              FAILED="${FAILED}${page} (HTTP ${HTTP})\n"
+            fi
+          done
+          echo "all_ok=$ALL_OK" >> "$GITHUB_OUTPUT"
+          printf "failed_pages<<EOF\n%s\nEOF" "$FAILED" >> "$GITHUB_OUTPUT"
+
+      # -----------------------------------------------------------------------
+      # Step 6 — Email Joe: resolved or manual action required
+      # -----------------------------------------------------------------------
+      - name: Email Joe — resolved
+        if: steps.validate.outputs.all_ok == 'true'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.ALERT_EMAIL_USER }}
+          password: ${{ secrets.ALERT_EMAIL_PASS }}
+          subject: "✅ Crossroads autofix resolved the issue"
+          to: joe@crossroads-soberliving.com
+          from: ${{ secrets.ALERT_EMAIL_USER }}
+          body: |
+            The Crossroads Sober Living site has been automatically restored. ✅
+
+            Trigger reason: ${{ github.event.inputs.reason }}
+            Failure type diagnosed: ${{ steps.diagnose.outputs.failure_type }}
+            New deployment ID: ${{ steps.redeploy.outputs.new_deployment_id }}
+            Final deployment state: ${{ steps.poll.outputs.final_state }}
+
+            All public pages are now returning 200:
+              • / ✅
+              • /program ✅
+              • /contact ✅
+              • /contract ✅
+
+            Vercel dashboard: https://vercel.com/dashboard/team/${{ env.VERCEL_TEAM_ID }}/${{ env.VERCEL_PROJECT_ID }}
+            Supabase dashboard: https://supabase.com/dashboard/project/${{ env.SUPABASE_PROJECT_ID }}
+
+      - name: Email Joe — manual action required
+        if: steps.validate.outputs.all_ok != 'true'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.ALERT_EMAIL_USER }}
+          password: ${{ secrets.ALERT_EMAIL_PASS }}
+          subject: "🔴 Crossroads autofix could not restore the site — manual action required"
+          to: joe@crossroads-soberliving.com
+          from: ${{ secrets.ALERT_EMAIL_USER }}
+          body: |
+            The autofix workflow was unable to automatically restore the site. 🔴
+
+            Trigger reason: ${{ github.event.inputs.reason }}
+            Failure type diagnosed: ${{ steps.diagnose.outputs.failure_type }}
+            Vercel deployment state: ${{ steps.vercel-check.outputs.state }}
+            New deployment ID: ${{ steps.redeploy.outputs.new_deployment_id }}
+            Final deployment state: ${{ steps.poll.outputs.final_state }}
+
+            Pages still failing:
+            ${{ steps.validate.outputs.failed_pages }}
+
+            Please investigate manually:
+            Vercel dashboard: https://vercel.com/dashboard/team/${{ env.VERCEL_TEAM_ID }}/${{ env.VERCEL_PROJECT_ID }}
+            Supabase dashboard: https://supabase.com/dashboard/project/${{ env.SUPABASE_PROJECT_ID }}
+
+            Workflow run logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}

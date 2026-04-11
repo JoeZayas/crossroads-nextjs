@@ -1,0 +1,229 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+  schedule:
+    # Run functional tests every day at 06:00 UTC
+    - cron: '0 6 * * *'
+
+env:
+  BASE_URL: https://crossroads-soberliving.com
+  VERCEL_TEAM_ID: team_94v51elgUGI5VnjgoGAgXJLN
+  VERCEL_PROJECT_ID: prj_GU1rxiYVEt8oMvAGIBK9FaHVsk0V
+  SUPABASE_PROJECT_ID: tdsxvktekadesvobatzx
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # 1. Unit tests
+  # ---------------------------------------------------------------------------
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests with coverage
+        run: npm run test:unit -- --ci --coverage
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 14
+
+  # ---------------------------------------------------------------------------
+  # 2. Build check (TypeScript + Next.js build)
+  # ---------------------------------------------------------------------------
+  build-check:
+    name: Build Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      ADMIN_PASSWORD_HASH: ${{ secrets.ADMIN_PASSWORD_HASH }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript type check
+        run: npx tsc --noEmit
+
+      - name: Next.js build
+        run: npm run build
+
+  # ---------------------------------------------------------------------------
+  # 3. Functional tests (runs after build-check on push; always on schedule)
+  # ---------------------------------------------------------------------------
+  functional-tests:
+    name: Functional Tests
+    runs-on: ubuntu-latest
+    needs: [build-check]
+    if: |
+      (github.event_name == 'push' && needs.build-check.result == 'success') ||
+      github.event_name == 'schedule'
+    env:
+      BASE_URL: https://crossroads-soberliving.com
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Wait for Vercel deployment (push only)
+        if: github.event_name == 'push'
+        run: sleep 60
+
+      - name: Run functional tests
+        run: npm run test:functional
+
+  # ---------------------------------------------------------------------------
+  # 4. Uptime monitor (every 15 minutes)
+  # ---------------------------------------------------------------------------
+  uptime-monitor:
+    name: Uptime Monitor
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    steps:
+      - name: Check all public pages
+        id: check
+        run: |
+          PAGES=("/" "/program" "/contact" "/contract")
+          FAILED=""
+          for page in "${PAGES[@]}"; do
+            URL="https://crossroads-soberliving.com${page}"
+            START=$(date +%s%3N)
+            HTTP_CODE=$(curl -o /dev/null -s -w "%{http_code}" --max-time 5 "$URL")
+            END=$(date +%s%3N)
+            ELAPSED=$((END - START))
+            echo "Page: $page  HTTP: $HTTP_CODE  Time: ${ELAPSED}ms"
+            if [ "$HTTP_CODE" != "200" ] || [ "$ELAPSED" -gt 5000 ]; then
+              FAILED="${FAILED}${page} (HTTP ${HTTP_CODE}, ${ELAPSED}ms)\n"
+            fi
+          done
+          if [ -n "$FAILED" ]; then
+            echo "failed=true" >> "$GITHUB_OUTPUT"
+            printf "failed_pages<<EOF\n%s\nEOF" "$FAILED" >> "$GITHUB_OUTPUT"
+          else
+            echo "failed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Send alert email on failure
+        if: steps.check.outputs.failed == 'true'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.ALERT_EMAIL_USER }}
+          password: ${{ secrets.ALERT_EMAIL_PASS }}
+          subject: "🚨 Crossroads Uptime Alert — pages down"
+          to: joe@crossroads-soberliving.com
+          from: ${{ secrets.ALERT_EMAIL_USER }}
+          body: |
+            One or more Crossroads Sober Living pages failed the uptime check.
+
+            Failed pages:
+            ${{ steps.check.outputs.failed_pages }}
+
+            Vercel dashboard: https://vercel.com/team_94v51elgUGI5VnjgoGAgXJLN/prj_GU1rxiYVEt8oMvAGIBK9FaHVsk0V
+            Supabase dashboard: https://supabase.com/dashboard/project/tdsxvktekadesvobatzx
+
+            An autofix workflow has been triggered automatically.
+
+      - name: Trigger autofix workflow on failure
+        if: steps.check.outputs.failed == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'autofix.yml',
+              ref: 'main',
+              inputs: {
+                reason: `Uptime check failed: ${{ steps.check.outputs.failed_pages }}`
+              }
+            });
+
+  # ---------------------------------------------------------------------------
+  # 5. Failure notification (push/PR only)
+  # ---------------------------------------------------------------------------
+  notify-failure:
+    name: Notify Failure
+    runs-on: ubuntu-latest
+    needs: [unit-tests, build-check, functional-tests]
+    if: |
+      always() &&
+      (github.event_name == 'push' || github.event_name == 'pull_request') &&
+      (needs.unit-tests.result == 'failure' || needs.build-check.result == 'failure' || needs.functional-tests.result == 'failure')
+    steps:
+      - name: Determine which jobs failed
+        id: failed-jobs
+        run: |
+          FAILED=""
+          if [ "${{ needs.unit-tests.result }}" == "failure" ]; then
+            FAILED="${FAILED}• unit-tests\n"
+          fi
+          if [ "${{ needs.build-check.result }}" == "failure" ]; then
+            FAILED="${FAILED}• build-check\n"
+          fi
+          if [ "${{ needs.functional-tests.result }}" == "failure" ]; then
+            FAILED="${FAILED}• functional-tests\n"
+          fi
+          printf "failed_jobs<<EOF\n%s\nEOF" "$FAILED" >> "$GITHUB_OUTPUT"
+
+      - name: Send failure notification email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.ALERT_EMAIL_USER }}
+          password: ${{ secrets.ALERT_EMAIL_PASS }}
+          subject: "❌ CI Failure — ${{ github.repository }} @ ${{ github.sha }}"
+          to: joe@crossroads-soberliving.com
+          from: ${{ secrets.ALERT_EMAIL_USER }}
+          body: |
+            A CI pipeline failure was detected on ${{ github.repository }}.
+
+            Commit: ${{ github.sha }}
+            Branch: ${{ github.ref_name }}
+            Triggered by: ${{ github.actor }}
+
+            Failed jobs:
+            ${{ steps.failed-jobs.outputs.failed_jobs }}
+
+            Logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
