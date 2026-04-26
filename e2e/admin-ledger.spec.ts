@@ -1,12 +1,17 @@
 import { test, expect } from "@playwright/test";
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "";
 
 test.describe("Admin ledger — financial accuracy", () => {
-  test.skip(!ADMIN_PASSWORD, "ADMIN_PASSWORD not set — skipping authed flows");
+  test.skip(
+    !ADMIN_PASSWORD || !ADMIN_EMAIL,
+    "ADMIN_EMAIL and ADMIN_PASSWORD not set — skipping authed flows",
+  );
 
   test.beforeEach(async ({ page }) => {
     await page.goto("/admin/login");
+    await page.getByLabel(/email/i).fill(ADMIN_EMAIL);
     await page.getByLabel(/password/i).fill(ADMIN_PASSWORD);
     await page.getByRole("button", { name: /sign in|log in/i }).click();
     await expect(page).toHaveURL(/\/admin(\/.*)?$/, { timeout: 10_000 });
