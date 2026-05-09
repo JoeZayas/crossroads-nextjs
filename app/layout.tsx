@@ -8,8 +8,8 @@ const poppins = Poppins({ weight: ['400', '500', '600', '700', '800'], subsets: 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Crossroads Sober Living - Your Path to Recovery",
-  description: "A supportive community helping individuals transition from addiction to a fulfilling life through stable employment, community, and housing.",
+  title: "Men's Sober Living in Rochester, MN | Crossroads Sober Living",
+  description: "Crossroads Sober Living offers structured men's recovery housing in Rochester, Minnesota. MAT-supportive, affordable, and community-focused. Two houses available. Call (507) 398-1970.",
 };
 
 export default function RootLayout({

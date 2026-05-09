@@ -17,6 +17,8 @@ export default function Footer() {
               <li><Link href="/" className="text-slate-300 hover:text-amber-400 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400 rounded">Home</Link></li>
               <li><Link href="/about" className="text-slate-300 hover:text-amber-400 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400 rounded">About</Link></li>
               <li><Link href="/program" className="text-slate-300 hover:text-amber-400 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400 rounded">Our Program</Link></li>
+              <li><Link href="/rochester-mn" className="text-slate-300 hover:text-amber-400 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400 rounded">Rochester, MN</Link></li>
+              <li><Link href="/faq" className="text-slate-300 hover:text-amber-400 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400 rounded">FAQ</Link></li>
               <li><Link href="/contact" className="text-slate-300 hover:text-amber-400 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400 rounded">Contact</Link></li>
             </ul>
           </nav>

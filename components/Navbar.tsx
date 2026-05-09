@@ -13,6 +13,8 @@ export default function Navbar() {
     { name: 'Home', href: '/' },
     { name: 'About', href: '/about' },
     { name: 'Our Program', href: '/program' },
+    { name: 'Rochester, MN', href: '/rochester-mn' },
+    { name: 'FAQ', href: '/faq' },
     { name: 'Contact & Intake', href: '/contact' },
     { name: 'House Guidelines', href: '/contract' },
   ];
