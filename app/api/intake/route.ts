@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
+import { forwardToCrm } from '@/lib/crm-forward';
 
 // NOTE: Before using this API route, you need to:
 // 1. Sign up for a free Resend account at https://resend.com
@@ -390,8 +391,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Forward the validated payload to the CRM (best-effort; the email above
+    // is the fallback record, so a CRM failure must not fail the submission).
+    let crm: 'ok' | 'failed' = 'failed';
+    const crmResult = await forwardToCrm('/api/public/intake', formData);
+    if (crmResult.ok) {
+      crm = 'ok';
+    } else {
+      console.error(`[crm-forward] intake forwarding failed: ${crmResult.error}`);
+    }
+
     return NextResponse.json(
-      { success: true, message: 'Intake form submitted successfully', emailId: data?.id },
+      { success: true, message: 'Intake form submitted successfully', emailId: data?.id, crm },
       { status: 200 }
     );
   } catch (error) {
