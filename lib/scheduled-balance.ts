@@ -15,6 +15,12 @@ type RentPaymentLedgerRow = {
   entry_date: string;
 };
 
+type ResidentData = {
+  resident_id: string;
+  payment_type: PaymentType | null;
+  move_in_date: string | null;
+};
+
 const WEEKLY_RATE = 165;
 const MONTHLY_RATE = 650;
 const RENT_DUE_PATTERN = /Rent due (\d{1,2}\/\d{1,2}\/\d{4}) to (\d{1,2}\/\d{1,2}\/\d{4})/i;
@@ -107,7 +113,14 @@ export async function applyScheduledBalances(
     }
   }
 
-  const residentTypeById = new Map(residents.map((resident) => [resident.resident_id, resident.payment_type]));
+  const residentDataById = new Map(residents.map((resident) => [
+    resident.resident_id,
+    {
+      resident_id: resident.resident_id,
+      payment_type: resident.payment_type,
+      move_in_date: resident.move_in_date,
+    } as ResidentData,
+  ]));
 
   // Group payments by resident, sorted chronologically
   const paymentsByResident = new Map<string, RentPaymentLedgerRow[]>();
@@ -121,31 +134,43 @@ export async function applyScheduledBalances(
   // "Rent due" period sequentially, advancing coverage by whole periods. This avoids
   // anchoring coverage to payment entry_date (which is when cash was received, not
   // which period it covers).
+  // For residents without "Rent due" entries, start coverage from their move_in_date.
   const latestPaymentCoverageByResident = new Map<string, Date>();
   for (const [residentId, payments] of paymentsByResident) {
-    const paymentType = residentTypeById.get(residentId);
+    const residentData = residentDataById.get(residentId);
+    if (!residentData || !residentData.payment_type) {
+      continue;
+    }
+
     const latestDueEnd = latestDueEndByResident.get(residentId);
-    if (!paymentType || !latestDueEnd) {
+    // If no "Rent due" entries exist, use move_in_date as baseline; otherwise skip if no baseline
+    let coverageBaseline = latestDueEnd;
+    if (!coverageBaseline && residentData.move_in_date) {
+      const [yyyy, mm, dd] = residentData.move_in_date.split("-").map(Number);
+      coverageBaseline = new Date(yyyy, mm - 1, dd);
+    }
+
+    if (!coverageBaseline) {
       continue;
     }
 
     payments.sort((a, b) => a.entry_date.localeCompare(b.entry_date));
 
-    let coverage = latestDueEnd;
+    let coverage = coverageBaseline;
     for (const row of payments) {
       // Parse as local date to avoid UTC-offset shifting the date by one day
       const [yyyy, mm, dd] = row.entry_date.split("-").map(Number);
       const paymentDate = new Date(yyyy, mm - 1, dd);
-      // Only apply payments made after the last formally billed period
-      if (paymentDate <= latestDueEnd) {
+      // Only apply payments made after the baseline period
+      if (paymentDate <= coverageBaseline) {
         continue;
       }
-      if (paymentType === "Weekly") {
+      if (residentData.payment_type === "Weekly") {
         const weeks = Math.floor(Math.abs(Number(row.amount)) / WEEKLY_RATE);
         if (weeks > 0) {
           coverage = addDays(coverage, weeks * 7);
         }
-      } else if (paymentType === "Monthly") {
+      } else if (residentData.payment_type === "Monthly") {
         const months = Math.floor(Math.abs(Number(row.amount)) / MONTHLY_RATE);
         if (months > 0) {
           coverage = new Date(coverage.getFullYear(), coverage.getMonth() + months + 1, 0);
@@ -153,7 +178,7 @@ export async function applyScheduledBalances(
       }
     }
 
-    if (coverage > latestDueEnd) {
+    if (coverage > coverageBaseline) {
       latestPaymentCoverageByResident.set(residentId, coverage);
     }
   }

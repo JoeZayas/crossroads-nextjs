@@ -25,7 +25,7 @@ export async function GET() {
 
   try {
     const monthStartIso = `${new Date().toISOString().slice(0, 7)}-01`;
-    const [activeBalances, activeResidents, monthPayments, lastRentPayments, rentDueEntries] = await Promise.all([
+    const [activeBalances, activeResidents, monthPayments, lastRentPayments, rentDueEntries, overdueRows] = await Promise.all([
       supabaseRest<ResidentBalanceRow[]>(
         "v_resident_balances?select=resident_id,full_name,house_name,status,payment_type,move_in_date,move_out_date,balance&status=eq.Active&order=full_name.asc",
         "GET",
@@ -44,6 +44,11 @@ export async function GET() {
       ),
       supabaseRest<Array<{ resident_id: string; description: string }>>(
         `ledger_entries?select=resident_id,description&entry_type=eq.charge&description=ilike.${encodeURIComponent("Rent due%")}`,
+        "GET",
+        token,
+      ),
+      supabaseRest<Array<{ resident_id: string; full_name: string; house_name: string | null; balance: number; last_payment_date: string | null }>>(
+        "v_overdue_residents?select=resident_id,full_name,house_name,balance,last_payment_date&order=balance.desc",
         "GET",
         token,
       ),
@@ -112,17 +117,14 @@ export async function GET() {
       owedThisMonth += Math.max(0, scheduledThisMonth - paidThisMonth);
     }
 
-    const overdue: OverdueResidentRow[] = projectedBalances
-      .filter((row) => Number(row.balance) > 0 || Number(row.scheduled_due_missing ?? 0) > 0)
-      .map((row) => ({
-        resident_id: row.resident_id,
-        full_name: row.full_name,
-        house_name: row.house_name,
-        balance: Number(row.balance),
-        due_now: Number(row.scheduled_due_missing ?? 0),
-        last_payment_date: paymentMap.get(row.resident_id) ?? null,
-      }))
-      .sort((a, b) => Number(b.balance) - Number(a.balance));
+    const overdue: OverdueResidentRow[] = overdueRows.map((row) => ({
+      resident_id: row.resident_id,
+      full_name: row.full_name,
+      house_name: row.house_name,
+      balance: Number(row.balance),
+      due_now: Number(row.balance),
+      last_payment_date: row.last_payment_date,
+    }));
 
     const totalOwed = overdue.reduce((sum, row) => sum + Number(row.balance), 0);
     const paymentsThisMonth = monthPayments.reduce(
