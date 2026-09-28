@@ -50,7 +50,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-slate-700 pt-8 text-center text-slate-300">
-          <p><small>&copy; {new Date().getFullYear()} Crossroads Sober Living. All rights reserved.</small></p>
+          <p><small>&copy; {new Date().getFullYear()} Crossroads Sober Living. All rights reserved. · <Link href="/privacy" className="hover:text-amber-400 underline">Privacy Policy</Link></small></p>
         </div>
       </div>
     </footer>
